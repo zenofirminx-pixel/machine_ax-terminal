@@ -1,12 +1,10 @@
-import db from "../lib/firebase.js";
-
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
-// 🧠 base de données en dur (ULTRA SAFE)
+// 🧠 base de liens en dur
 const DB = {
   github: "https://github.com",
   google: "https://google.com",
@@ -24,7 +22,7 @@ const DB = {
   node: "https://nodejs.org"
 };
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   setCors(res);
 
   if (req.method === "OPTIONS") {
@@ -51,22 +49,9 @@ export default async function handler(req, res) {
 
   const url = DB[q] || null;
 
-  const result = {
+  return res.status(200).json({
     ok: !!url,
     query: q,
     url
-  };
-
-  // 🧠 Firebase memory (SAFE, optional)
-  try {
-    await db.collection("search_logs").add({
-      query: q,
-      url,
-      createdAt: Date.now()
-    });
-  } catch (e) {
-    console.log("Firebase error:", e);
-  }
-
-  return res.status(200).json(result);
+  });
 }
