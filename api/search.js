@@ -3,9 +3,18 @@ import dev from "../data/dev.json";
 import socials from "../data/socials.json";
 import gaming from "../data/gaming.json";
 
-const DB = { ...ai, ...dev, ...socials, ...gaming };
+const DB = {...ai,...dev,...socials,...gaming };
 
 export default async function handler(req, res) {
+  // Ajoute ces 3 lignes pour CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   const q = String(req.query.q || "").toLowerCase().trim();
 
   if (!q) {
@@ -18,7 +27,7 @@ export default async function handler(req, res) {
   const url = DB[q];
 
   const result = {
-    ok: !!url,
+    ok:!!url,
     query: q,
     url: url || null
   };
@@ -31,7 +40,6 @@ export default async function handler(req, res) {
 
     if (wikiRes.ok) {
       const wiki = await wikiRes.json();
-
       result.wikipedia = {
         title: wiki.title,
         description: wiki.extract,
@@ -48,13 +56,12 @@ export default async function handler(req, res) {
 
     if (ddgRes.ok) {
       const ddg = await ddgRes.json();
-
       result.duckduckgo = {
         title: ddg.Heading || null,
         abstract: ddg.Abstract || null,
         related: (ddg.RelatedTopics || [])
-          .slice(0, 5)
-          .map(r => ({
+         .slice(0, 5)
+         .map(r => ({
             text: r.Text,
             url: r.FirstURL
           }))
