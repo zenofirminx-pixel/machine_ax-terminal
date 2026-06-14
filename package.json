@@ -1,13 +1,8 @@
 {
   "name": "aurx-link-backend",
   "version": "1.0.0",
-  "description": "AurX Link - smart link dictionary backend",
-  "main": "index.js",
+  "description": "AurX Link backend",
   "type": "module",
-  "scripts": {
-    "dev": "vercel dev",
-    "start": "node api/search.js"
-  },
   "dependencies": {
     "firebase-admin": "^12.0.0"
   }
