@@ -1,9 +1,17 @@
 {
-  "name": "aurx-link-backend",
+  "name": "aurx-network-backend",
   "version": "1.0.0",
+  "description": "AurX Network backend - link resolver + AI enriched search API",
+  "main": "api/main.js",
   "type": "module",
+  "scripts": {
+    "start": "node api/main.js",
+    "dev": "node api/main.js"
+  },
+  "dependencies": {
+    "google-auth-library": "^9.0.0"
+  },
   "engines": {
     "node": "18.x"
-  },
-  "private": true
+  }
 }
