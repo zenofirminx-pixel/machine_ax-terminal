@@ -1,68 +1,30 @@
 export default async function handler(req, res) {
-  const { code } = req.query;
+  // 🟢 AUTORISATIONS CORS (Indispensable pour l'entente entre tes deux sites Vercel)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', 'https://firmin-history.vercel.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-  // L'URL exacte de ta PWA que tu viens de me donner
-  const PWA_URL = "https://firmin-history.vercel.app"; 
-
-  if (!code) {
-    return res.status(400).json({
-      ok: false,
-      error: "Missing OAuth code"
-    });
+  // Gère la pré-vérification du navigateur (Preflight request)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
   try {
-    // 🔁 1. Échange du code contre les tokens Google
-    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        code,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-        grant_type: "authorization_code"
-      })
-    });
-
-    const tokens = await tokenRes.json();
-
-    if (!tokens.access_token) {
-      throw new Error(tokens.error || "No access_token");
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Non autorisé : Token manquant' });
     }
 
-    // 👤 2. Récupération des infos de l'utilisateur Google
-    const userRes = await fetch(
-      "https://www.googleapis.com/oauth2/v2/userinfo",
-      {
-        headers: {
-          Authorization: `Bearer ${tokens.access_token}`
-        }
-      }
-    );
+    const token = authHeader.split(' ')[1];
+    
+    // Décodage du token Base64 envoyé par le frontend
+    const userData = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
 
-    const user = await userRes.json();
-
-    // 🧠 3. Construction de l'objet session
-    const session = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      picture: user.picture,
-      locale: user.locale || "fr"
-    };
-
-    // 🔑 4. Transformation des infos en un Token Base64 pour ton index.html
-    const token = Buffer.from(JSON.stringify(session)).toString('base64');
-
-    // 🚀 5. Redirection REDOUTABLE et DIRECTE vers ta PWA avec le token !
-    return res.redirect(`${PWA_URL}/?token=${token}`);
-
-  } catch (err) {
-    console.error("OAuth error:", err);
-    // En cas d'erreur, on renvoie l'utilisateur à la PWA avec un indicateur d'échec
-    return res.redirect(`${PWA_URL}/?login=error`);
+    // Renvoie des données de l'utilisateur au frontend
+    return res.status(200).json(userData);
+  } catch (e) {
+    console.error("Erreur de décodage du token:", e);
+    return res.status(400).json({ error: 'Token invalide ou corrompu' });
   }
 }
