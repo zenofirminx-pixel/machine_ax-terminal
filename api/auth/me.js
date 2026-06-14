@@ -1,30 +1,29 @@
-import { verifyGoogleToken } from "./google.js";
 import { parse } from "cookie";
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   try {
     const cookies = parse(req.headers.cookie || "");
-    const authHeader = req.headers.authorization;
 
-    let token = null;
+    const session = cookies.aurx_token;
 
-    // 🔐 priorité header puis cookie
-    if (authHeader) {
-      token = authHeader.split(" ")[1];
-    }
-
-    if (!token && cookies.aurx_token) {
-      token = cookies.aurx_token;
-    }
-
-    if (!token) {
+    if (!session) {
       return res.status(401).json({
         ok: false,
-        error: "No token"
+        error: "No session"
       });
     }
 
-    const user = await verifyGoogleToken(token);
+    // 🔐 decode base64 -> JSON user
+    const user = JSON.parse(
+      Buffer.from(session, "base64").toString("utf-8")
+    );
+
+    if (!user || !user.id) {
+      return res.status(401).json({
+        ok: false,
+        error: "Invalid session"
+      });
+    }
 
     return res.status(200).json({
       ok: true,
@@ -32,9 +31,11 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
+    console.error("ME ERROR:", err);
+
     return res.status(401).json({
       ok: false,
-      error: "Invalid token"
+      error: "Session corrupted"
     });
   }
 }
