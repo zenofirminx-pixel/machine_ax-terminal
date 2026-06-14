@@ -1,19 +1,7 @@
-import { OAuth2Client } from "google-auth-library";
+export default function handler(req, res) {
+  const redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${
+    process.env.GOOGLE_CLIENT_ID
+  }&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=openid%20email%20profile`;
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-export async function verifyGoogleToken(token) {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID
-  });
-
-  const p = ticket.getPayload();
-
-  return {
-    uid: p.sub,
-    name: p.name,
-    email: p.email,
-    photoURL: p.picture
-  };
+  res.redirect(redirect);
 }
