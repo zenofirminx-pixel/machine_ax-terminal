@@ -1,0 +1,13 @@
+{
+  "name": "aurx-network-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "api/main.js",
+  "scripts": {
+    "start": "node api/main.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "google-auth-library": "^9.0.0"
+  }
+}
